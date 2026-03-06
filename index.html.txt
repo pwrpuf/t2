@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz • L'état général</title>
+  <!-- Шрифты -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600&display=swap" rel="stylesheet">
+  <style>
+    /* СБРОС И ОСНОВНЫЕ ПЕРЕМЕННЫЕ */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(145deg, #D8F0E5 0%, #F0F7F0 100%);
+      font-family: 'Nunito Sans', sans-serif;
+      color: #2F5D5A;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+      position: relative;
+    }
+
+    /* Текстурный фон (имитация льна) */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background-image: 
+        repeating-linear-gradient(45deg, rgba(200,200,180,0.1) 0px, rgba(200,200,180,0.1) 2px, transparent 2px, transparent 8px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    #app {
+      width: 100%;
+      max-width: 850px;
+      background-color: rgba(255,255,255,0.3);
+      backdrop-filter: blur(3px);
+      border-radius: 56px;
+      padding: 32px 28px;
+      box-shadow: 0 25px 40px -15px rgba(47,93,90,0.2);
+      border: 1px solid rgba(255,255,255,0.6);
+      position: relative;
+      z-index: 2;
+    }
+
+    /* ЭКРАНЫ */
+    .screen {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+    .hidden {
+      display: none !important;
+    }
+
+    /* ТИПОГРАФИКА */
+    h1, h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 700;
+      color: #2F5D5A;
+      letter-spacing: -0.01em;
+    }
+    h1 {
+      font-size: 3.2rem;
+      line-height: 1.1;
+      margin-bottom: 8px;
+    }
+    h2 {
+      font-size: 2.5rem;
+      text-align: center;
+    }
+
+    .subtitle {
+      font-size: 1.2rem;
+      color: #3f706c;
+      margin-bottom: 16px;
+      font-weight: 400;
+    }
+
+    /* КНОПКИ */
+    .btn {
+      border: none;
+      border-radius: 60px;
+      padding: 16px 32px;
+      font-family: 'Nunito Sans', sans-serif;
+      font-weight: 600;
+      font-size: 1.1rem;
+      background-color: #B6CDB6;
+      color: #1e403d;
+      cursor: pointer;
+      transition: 0.2s;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.05);
+      border: 1px solid rgba(255,255,255,0.3);
+      align-self: center;
+      min-width: 200px;
+    }
+
+    .btn:hover:not(:disabled) {
+      background-color: #a2b9a2;
+      transform: translateY(-3px);
+      box-shadow: 0 15px 25px rgba(47,93,90,0.15);
+    }
+
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    #start-btn {
+      background: #E8B4A2;
+      color: #2F5D5A;
+      font-size: 1.4rem;
+      padding: 20px 50px;
+      box-shadow: 0 12px 24px rgba(232,180,162,0.3);
+    }
+
+    #next-btn {
+      background: #E8B4A2;
+    }
+
+    #validate-btn {
+      background: #B6CDB6;
+    }
+
+    /* ПРОГРЕСС */
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .progress-label {
+      font-size: 0.95rem;
+      background: rgba(255,255,255,0.6);
+      padding: 6px 16px;
+      border-radius: 40px;
+      color: #2F5D5A;
+    }
+    .progress-track {
+      width: 100%;
+      height: 10px;
+      background-color: rgba(200,200,180,0.3);
+      border-radius: 20px;
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background-color: #E8B4A2;
+      border-radius: 20px;
+      transition: width 0.3s ease;
+    }
+/* КАРТОЧКА ВОПРОСА */
+    .question-card {
+      background: #FAF3E8;
+      border-radius: 40px;
+      padding: 32px;
+      box-shadow: 0 15px 30px rgba(47,93,90,0.08);
+      border: 1px solid #E5D3B5;
+      margin-bottom: 16px;
+    }
+
+    .question-text {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 28px;
+      color: #1e4a47;
+      line-height: 1.4;
+    }
+
+    /* ОТВЕТЫ (ОБЩИЕ) */
+    .options-container {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .option-item {
+      display: flex;
+      align-items: center;
+      background: #fdfdfd;
+      border-radius: 50px;
+      padding: 12px 24px;
+      border: 2px solid transparent;
+      transition: 0.15s;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+
+    .option-item:hover {
+      background: #E0F0E8;
+      border-color: #B6CDB6;
+    }
+
+    .option-item.selected {
+      background: #B6CDB6;
+      border-color: #8faf8f;
+      color: #1e403d;
+    }
+
+    .option-item.correct-highlight {
+      background: #E8B4A2;
+      border-color: #d49c8a;
+    }
+
+    .option-item.wrong-highlight {
+      background: #F4C3C3;
+      border-color: #d99f9f;
+    }
+
+    .option-item input[type="radio"] {
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border: 2px solid #B6CDB6;
+      border-radius: 50%;
+      margin-right: 18px;
+      position: relative;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .option-item input[type="radio"]:checked {
+      background-color: #2F5D5A;
+      border-color: #2F5D5A;
+      box-shadow: inset 0 0 0 4px #fdfdfd;
+    }
+
+    .option-label {
+      flex: 1;
+      font-size: 1.1rem;
+    }
+
+    /* СПЕЦИАЛЬНО ДЛЯ ВОПРОСА 4 (СОПОСТАВЛЕНИЕ) */
+    .matching-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      justify-content: space-between;
+    }
+    .matching-col {
+      flex: 1 1 240px;
+    }
+    .matching-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      background: #f9f2e7;
+      padding: 8px 16px;
+      border-radius: 40px;
+    }
+    .matching-left {
+      font-weight: 700;
+      min-width: 150px;
+    }
+    .matching-right select {
+      padding: 10px 20px;
+      border-radius: 40px;
+      border: 1.5px solid #B6CDB6;
+      background: white;
+      font-family: 'Nunito Sans', sans-serif;
+      font-size: 1rem;
+      color: #2F5D5A;
+      cursor: pointer;
+    }
+    .feedback-icon {
+      font-size: 1.4rem;
+      margin-left: 10px;
+    }
+
+    /* ПОЯСНЕНИЕ */
+    .explanation-box {
+      margin-top: 28px;
+      padding: 18px 22px;
+      background: rgba(184, 205, 184, 0.2);
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border: 1px dashed #B6CDB6;
+      font-size: 1.05rem;
+      color: #1e4a47;
+    }
+    .explanation-icon {
+      font-size: 2.2rem;
+    }
+
+    /* НАВИГАЦИЯ */
+    .nav-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    /* ЭКРАН РЕЗУЛЬТАТА */
+    .result-thermometer {
+      width: 100%;
+      height: 36px;
+      background: linear-gradient(90deg, #F4C3C3, #E8B4A2, #B6CDB6);
+      border-radius: 40px;
+      margin: 24px 0 12px;
+      position: relative;
+      border: 2px solid rgba(255,255,255,0.5);
+    }
+    .thermometer-marker {
+      width: 24px;
+      height: 48px;
+      background: #2F5D5A;
+      border-radius: 40px;
+      position: absolute;
+      top: -8px;
+      left: 0;
+      transform: translateX(-50%);
+      transition: left 0.3s ease;
+      border: 3px solid white;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .result-comment {
+      font-size: 1.5rem;
+      text-align: center;
+      margin: 20px 0 30px;
+      font-weight: 600;
+      background: rgba(255,255,255,0.5);
+      padding: 16px;
+      border-radius: 60px;
+    }
+
+    #review-btn, #share-btn {
+      min-width: 160px;
+    }
+    #share-btn {
+      background: #E8B4A2;
+    }
+/* ДЕКОР (ВЕТОЧКИ) */
+    .decor {
+      font-size: 2rem;
+      opacity: 0.3;
+      position: absolute;
+      pointer-events: none;
+    }
+    .decor-1 { top: 10px; left: 20px; }
+    .decor-2 { bottom: 10px; right: 20px; transform: rotate(15deg); }
+
+    /* АДАПТАЦИЯ */
+    @media (max-width: 600px) {
+      #app { padding: 20px; }
+      h1 { font-size: 2.4rem; }
+      .question-card { padding: 22px; }
+      .matching-row { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <!-- Декоративные элементы (листья) -->
+  <div class="decor decor-1">🌿🌱</div>
+  <div class="decor decor-2">🍃🌸</div>
+
+  <!-- Экран приветствия -->
+  <div id="start-screen" class="screen">
+    <h1>Quiz : L'état général</h1>
+    <p class="subtitle">20 questions pour tester vos connaissances sur le vocabulaire et les expressions du thème.</p>
+    <div style="text-align: center; font-size: 4rem; line-height: 1;">🧘‍♀️</div>
+    <button id="start-btn" class="btn">Commencer</button>
+  </div>
+
+  <!-- Экран квиза -->
+  <div id="quiz-screen" class="screen hidden">
+    <div class="progress-header">
+      <span class="progress-label" id="question-counter">Question 1/20</span>
+      <span class="progress-label" id="score-badge">0/20</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+    <div class="question-card" id="question-card">
+      <!-- динамическое содержимое -->
+    </div>
+    <div class="nav-buttons">
+      <button id="validate-btn" class="btn" disabled>Valider</button>
+      <button id="next-btn" class="btn hidden">Suivant</button>
+    </div>
+  </div>
+
+  <!-- Экран результатов -->
+  <div id="result-screen" class="screen hidden">
+    <h2>Votre score : <span id="final-score">0</span>/20</h2>
+    <div class="result-thermometer" id="thermometer">
+      <div class="thermometer-marker" id="thermometer-marker"></div>
+    </div>
+    <p id="result-comment" class="result-comment"></p>
+    <div class="nav-buttons">
+      <button id="review-btn" class="btn">Revoir le quiz</button>
+      <button id="share-btn" class="btn">Partager</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    // --- ПОЛНЫЙ МАССИВ ВОПРОСОВ (20 шт) ---
+    const questions = [
+      { // 1
+        type: 'multiple',
+        question: 'Que signifie l\'expression « être patraque » ?',
+        options: ['Être en pleine forme', 'Être légèrement malade et fatigué', 'Être de mauvaise humeur', 'Avoir très faim'],
+        correct: 1,
+        explanation: '« Être patraque » = être légèrement malade et fatigué, sans gravité.'
+      },
+      { // 2
+        type: 'multiple',
+        question: 'Complétez la phrase : « Elle a l’air mal en point, elle a les traits __ par la fatigue. »',
+        options: ['tirés', 'creusés', 'marqués', 'fatigués'],
+        correct: 1,
+        explanation: 'On a les traits creusés, tirés ou marqués, mais l’expression figée est « traits creusés ».'
+      },
+      { // 3
+        type: 'multiple',
+        question: '« Surmené » signifie avoir trop de travail et être épuisé.',
+        options: ['Vrai', 'Faux'],
+        correct: 0,
+        explanation: 'Vrai, « surmené » = épuisé par le travail.'
+      },
+      { // 4  (matching)
+        type: 'matching',
+        question: 'Associez chaque expression à sa signification :',
+        leftItems: ['1. Avoir un pépin', '2. Être sur les rotules', '3. Tirer sur la corde', '4. Reprendre du poil de la bête'],
+        rightItems: ['a) Abuser de ses forces', 'b) Récupérer, retrouver de l’énergie', 'c) Avoir un problème', 'd) Être très fatigué'],
+        correctMapping: {0:2, 1:3, 2:0, 3:1}, // left index -> right index (0-based)
+        explanation: 'Correspondances : 1-c, 2-d, 3-a, 4-b.'
+      },
+      { // 5
+        type: 'multiple',
+        question: 'Que veut dire « se trouver mal » ?',
+options: ['Se sentir coupable', 'Avoir un malaise, s’évanouir', 'Se perdre dans la rue', 'Être malade longtemps'],
+        correct: 1,
+        explanation: '« Se trouver mal » = avoir un malaise, s\'évanouir.'
+      },
+      { // 6
+        type: 'multiple',
+        question: 'Dans le dialogue, Ludovic dit : « Elle va y laisser sa peau. » Que signifie cette expression ?',
+        options: ['Elle va perdre son travail', 'Elle va mourir à force de travailler', 'Elle va changer de personnalité', 'Elle va se faire licencier'],
+        correct: 1,
+        explanation: '« Y laisser sa peau » = mourir (souvent à force d\'efforts).'
+      },
+      { // 7
+        type: 'multiple',
+        question: 'Choisissez le synonyme de « récupérer » dans le contexte médical :',
+        options: ['Se reposer', 'Se remettre', 'Se coucher', 'Se plaindre'],
+        correct: 1,
+        explanation: '« Récupérer » = se remettre, retrouver la santé.'
+      },
+      { // 8
+        type: 'multiple',
+        question: 'Complétez : « Il a eu un gros __ de santé, mais il est tiré d’affaire. »',
+        options: ['problème', 'pépin', 'souci', 'accident'],
+        correct: 1,
+        explanation: 'On dit souvent « un pépin de santé » (familier).'
+      },
+      { // 9
+        type: 'multiple',
+        question: 'Que signifie « avoir du ressort » ?',
+        options: ['Avoir de l’argent', 'Avoir de l’énergie et de la capacité à rebondir', 'Avoir un ressort dans le lit', 'Être très souple'],
+        correct: 1,
+        explanation: '« Avoir du ressort » = avoir de l\'énergie, savoir rebondir.'
+      },
+      { // 10
+        type: 'multiple',
+        question: 'Comment dit-on familièrement « être épuisé » dans le texte ?',
+        options: ['Être crevé', 'Être cassé', 'Être vidé', 'Être mort'],
+        correct: 0,
+        explanation: 'Familier : « crevé » = très fatigué.'
+      },
+      { // 11
+        type: 'multiple',
+        question: 'Dans le dialogue, pourquoi Fanny est-elle fatiguée ?',
+        options: ['Elle fait du sport', 'Elle est surmenée par le travail', 'Elle a mal dormi', 'Elle est malade depuis longtemps'],
+        correct: 1,
+        explanation: 'Fanny est surmenée par son travail.'
+      },
+      { // 12
+        type: 'multiple',
+        question: 'Que veut dire « ne plus savoir où donner de la tête » ?',
+        options: ['Avoir trop de choses à faire et être débordé', 'Avoir mal à la tête', 'Ne pas trouver son chemin', 'Perdre la mémoire'],
+        correct: 0,
+        explanation: 'Être débordé, avoir trop de tâches.'
+      },
+      { // 13
+        type: 'multiple',
+        question: 'Dans la situation 3, que signifie « se remettre de ses émotions » ?',
+        options: ['Oublier ses sentiments', 'Récupérer après un choc émotionnel', 'Changer d’avis', 'Exprimer ses émotions'],
+        correct: 1,
+        explanation: 'Se remettre = récupérer, aller mieux après un choc.'
+      },
+      { // 14
+        type: 'multiple',
+        question: 'Comment appelle-t-on la personne qui aide à la rééducation ?',
+        options: ['Un médecin généraliste', 'Un kinésithérapeute (kiné)', 'Un chirurgien', 'Un pharmacien'],
+        correct: 1,
+        explanation: 'Le kinésithérapeute (kiné) aide à la rééducation.'
+      },
+      { // 15
+        type: 'multiple',
+        question: 'Que veut dire « flancher » ?',
+        options: ['Résister', 'Céder, faiblir', 'Courir vite', 'S’évanouir'],
+        correct: 1,
+        explanation: 'Flancher = céder, faiblir, ne plus tenir.'
+      },
+      { // 16
+        type: 'multiple',
+        question: 'Quelle expression signifie « recommencer à avoir bonne mine » ?',
+        options: ['Reprendre des couleurs', 'Perdre ses couleurs', 'Avoir une petite mine', 'Être vert'],
+        correct: 0,
+        explanation: '« Reprendre des couleurs » = retrouver bonne mine.'
+},
+      { // 17
+        type: 'multiple',
+        question: 'Transformez la phrase en utilisant la structure « avoir » pour exprimer la cause : « Pourquoi crie-t-elle ? – Parce qu’elle est en colère. »',
+        options: [
+          'Qu’est-ce qu’elle a à crier ? Elle a qu’elle est en colère.',
+          'Qu’est-ce qu’elle crie ? Elle a en colère.',
+          'Pourquoi elle a crier ? Elle a colère.',
+          'Elle a crié pourquoi ? Parce que colère.'
+        ],
+        correct: 0,
+        explanation: 'La structure correcte est : « Qu\'est-ce qu\'elle a à crier ? Elle a qu\'elle est en colère. »'
+      },
+      { // 18
+        type: 'multiple',
+        question: 'Que signifie « être sur pied » ?',
+        options: ['Être debout, être rétabli', 'Être fatigué', 'Être grand', 'Être couché'],
+        correct: 0,
+        explanation: '« Sur pied » = debout, rétabli.'
+      },
+      { // 19
+        type: 'multiple',
+        question: 'Complétez avec le bon mot : « Il a __ une sacrée épreuve. »',
+        options: ['traversé', 'surmonté', 'passé', 'vaincu'],
+        correct: 1,
+        explanation: 'On surmonte une épreuve.'
+      },
+      { // 20
+        type: 'multiple',
+        question: 'Dans l’expression « Je me suis trouvé mal », que signifie « se trouver mal » ?',
+        options: ['Se sentir malade', 'Avoir un malaise', 'Être maladroit', 'Se faire mal'],
+        correct: 1,
+        explanation: '« Se trouver mal » = avoir un malaise, s\'évanouir.'
+      }
+    ];
+
+    // --- СОСТОЯНИЕ ---
+    let currentIndex = 0;
+    let userAnswers = new Array(questions.length);
+    for (let i = 0; i < userAnswers.length; i++) userAnswers[i] = null;
+    let answered = false; // был ли дан ответ на текущий вопрос
+
+    // --- ЭЛЕМЕНТЫ DOM ---
+    const startScreen = document.getElementById('start-screen');
+    const quizScreen = document.getElementById('quiz-screen');
+    const resultScreen = document.getElementById('result-screen');
+    const startBtn = document.getElementById('start-btn');
+    const validateBtn = document.getElementById('validate-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const questionCard = document.getElementById('question-card');
+    const progressFill = document.getElementById('progress-fill');
+    const questionCounter = document.getElementById('question-counter');
+    const scoreBadge = document.getElementById('score-badge');
+    const finalScoreSpan = document.getElementById('final-score');
+    const thermometerMarker = document.getElementById('thermometer-marker');
+    const resultComment = document.getElementById('result-comment');
+    const reviewBtn = document.getElementById('review-btn');
+    const shareBtn = document.getElementById('share-btn');
+
+    // --- ФУНКЦИИ ---
+    function updateProgressAndScore() {
+      const percent = ((currentIndex) / questions.length) * 100;
+      progressFill.style.width = percent + '%';
+      questionCounter.textContent = Question ${currentIndex+1}/${questions.length};
+      // подсчёт отвеченных
+      let answeredCount = userAnswers.filter(a => a !== null).length;
+      scoreBadge.textContent = ${answeredCount}/${questions.length};
+    }
+
+    function renderQuestion() {
+      const q = questions[currentIndex];
+      let html = <div class="question-text">${q.question}</div>;
+
+      if (q.type === 'multiple') {
+        html += '<div class="options-container">';
+        q.options.forEach((opt, idx) => {
+          const checked = (userAnswers[currentIndex] === idx) ? 'checked' : '';
+          const disabled = answered ? 'disabled' : '';
+          let extraClass = '';
+          if (answered) {
+            if (idx === q.correct) extraClass = 'correct-highlight';
+            else if (idx === userAnswers[currentIndex] && idx !== q.correct) extraClass = 'wrong-highlight';
+} else if (userAnswers[currentIndex] === idx) {
+            extraClass = 'selected';
+          }
+          html += 
+            <div class="option-item ${extraClass}">
+              <input type="radio" name="option" value="${idx}" id="opt${idx}" ${checked} ${disabled}>
+              <label for="opt${idx}" class="option-label">${opt}</label>
+            </div>
+          ;
+        });
+        html += '</div>';
+      } else if (q.type === 'matching') {
+        const saved = userAnswers[currentIndex] || {};
+        html += '<div class="matching-container"><div class="matching-col">';
+        q.leftItems.forEach((left, i) => {
+          html += <div class="matching-row"><span class="matching-left">${left}</span>;
+          html += <div class="matching-right"><select id="match-${i}" ${answered ? 'disabled' : ''}>;
+          html += '<option value="">— Choisir —</option>';
+          q.rightItems.forEach((right, j) => {
+            const selected = (saved[i] === j) ? 'selected' : '';
+            html += <option value="${j}" ${selected}>${right}</option>;
+          });
+          html += '</select>';
+          if (answered) {
+            const isCorrect = (saved[i] === q.correctMapping[i]);
+            html += <span class="feedback-icon">${isCorrect ? '✅' : '❌'}</span>;
+          }
+          html += '</div></div>';
+        });
+        html += '</div></div>';
+      }
+
+      if (answered) {
+        html += <div class="explanation-box"><span class="explanation-icon">💡</span> ${q.explanation}</div>;
+      }
+
+      questionCard.innerHTML = html;
+
+      // Активация кнопки валидации для обычных вопросов
+      if (!answered) {
+        if (q.type === 'multiple') {
+          const radios = document.querySelectorAll('input[name="option"]');
+          radios.forEach(r => r.addEventListener('change', () => {
+            validateBtn.disabled = false;
+          }));
+          // Если уже выбран (например, при возврате), включить кнопку
+          if (userAnswers[currentIndex] !== null) validateBtn.disabled = false;
+        } else if (q.type === 'matching') {
+          const selects = document.querySelectorAll('select[id^="match-"]');
+          selects.forEach(s => s.addEventListener('change', enableValidateIfAllSelected));
+          // Проверить сразу
+          enableValidateIfAllSelected();
+        }
+      }
+    }
+
+    function enableValidateIfAllSelected() {
+      if (answered) return;
+      const selects = document.querySelectorAll('select[id^="match-"]');
+      const allSelected = Array.from(selects).every(sel => sel.value !== '');
+      validateBtn.disabled = !allSelected;
+    }
+
+    function validateAnswer() {
+      const q = questions[currentIndex];
+      if (q.type === 'multiple') {
+        const selected = document.querySelector('input[name="option"]:checked');
+        if (!selected) return;
+        userAnswers[currentIndex] = parseInt(selected.value);
+      } else if (q.type === 'matching') {
+        const selections = {};
+        for (let i = 0; i < q.leftItems.length; i++) {
+          const sel = document.getElementById(match-${i});
+          if (!sel || sel.value === '') return; // не должно случиться
+          selections[i] = parseInt(sel.value);
+        }
+        userAnswers[currentIndex] = selections;
+      }
+
+      answered = true;
+      validateBtn.disabled = true;
+      validateBtn.classList.add('hidden');
+      nextBtn.classList.remove('hidden');
+      renderQuestion();
+      updateProgressAndScore();
+    }
+
+    function nextQuestion() {
+      if (currentIndex + 1 < questions.length) {
+        currentIndex++;
+        answered = false;
+        validateBtn.classList.remove('hidden');
+        nextBtn.classList.add('hidden');
+        renderQuestion();
+        updateProgressAndScore();
+      } else {
+        // Конец квиза
+        showResults();
+      }
+    }
+function computeScore() {
+      let score = 0;
+      questions.forEach((q, idx) => {
+        const ans = userAnswers[idx];
+        if (ans === null) return;
+        if (q.type === 'multiple') {
+          if (ans === q.correct) score++;
+        } else if (q.type === 'matching') {
+          let ok = true;
+          for (let key in q.correctMapping) {
+            if (ans[key] !== q.correctMapping[key]) { ok = false; break; }
+          }
+          if (ok) score++;
+        }
+      });
+      return score;
+    }
+
+    function showResults() {
+      quizScreen.classList.add('hidden');
+      resultScreen.classList.remove('hidden');
+
+      const score = computeScore();
+      finalScoreSpan.textContent = score;
+
+      // термометр
+      const percent = (score / questions.length) * 100;
+      const thermo = document.getElementById('thermometer');
+      const markerWidth = thermometerMarker.offsetWidth;
+      const thermoWidth = thermo.offsetWidth;
+      let leftPos = (percent / 100) * thermoWidth;
+      if (leftPos < markerWidth/2) leftPos = markerWidth/2;
+      if (leftPos > thermoWidth - markerWidth/2) leftPos = thermoWidth - markerWidth/2;
+      thermometerMarker.style.left = leftPos + 'px';
+
+      let comment = '';
+      if (score <= 7) comment = '😴 Vous êtes patraque ? Il est temps de réviser !';
+      else if (score <= 14) comment = '🙂 Pas mal ! Vous tenez le coup, mais vous pouvez encore progresser.';
+      else comment = '💪 Bravo ! Vous avez la pêche et le vocabulaire qui va avec !';
+      resultComment.textContent = comment;
+    }
+
+    function restartQuiz() {
+      currentIndex = 0;
+      for (let i = 0; i < userAnswers.length; i++) userAnswers[i] = null;
+      answered = false;
+      validateBtn.classList.remove('hidden');
+      nextBtn.classList.add('hidden');
+      renderQuestion();
+      updateProgressAndScore();
+
+      resultScreen.classList.add('hidden');
+      quizScreen.classList.remove('hidden');
+    }
+
+    // --- ОБРАБОТЧИКИ ---
+    startBtn.addEventListener('click', () => {
+      startScreen.classList.add('hidden');
+      quizScreen.classList.remove('hidden');
+      restartQuiz();
+    });
+
+    validateBtn.addEventListener('click', validateAnswer);
+    nextBtn.addEventListener('click', nextQuestion);
+
+    reviewBtn.addEventListener('click', () => {
+      restartQuiz();
+    });
+
+    shareBtn.addEventListener('click', () => {
+      alert('Lien copié (simulation) – vous pouvez partager votre score !');
+    });
+
+    // Инициализация (рендер первого вопроса, но он не показывается до старта)
+    renderQuestion();
+    updateProgressAndScore();
+
+    // пересчет маркера при изменении размера окна
+    window.addEventListener('resize', () => {
+      if (!resultScreen.classList.contains('hidden')) {
+        const score = computeScore();
+        const percent = (score / questions.length) * 100;
+        const thermo = document.getElementById('thermometer');
+        const markerWidth = thermometerMarker.offsetWidth;
+        const thermoWidth = thermo.offsetWidth;
+        let leftPos = (percent / 100) * thermoWidth;
+        if (leftPos < markerWidth/2) leftPos = markerWidth/2;
+        if (leftPos > thermoWidth - markerWidth/2) leftPos = thermoWidth - markerWidth/2;
+        thermometerMarker.style.left = leftPos + 'px';
+      }
+    });
+  })();
+</script>
+</body>
+</html>
